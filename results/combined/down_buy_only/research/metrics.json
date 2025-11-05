@@ -1,0 +1,20 @@
+{
+  "total_trades": 1106,
+  "breakevens": 2,
+  "evaluated_trades": 1104,
+  "wins": 366,
+  "losses": 738,
+  "win_rate": 0.33152173913043476,
+  "gross_gains": 101918,
+  "gross_losses_abs": 116425,
+  "net_pips": -14507,
+  "profit_factor": 0.875396177796865,
+  "avg_win": 278.46448087431696,
+  "avg_loss_abs": 157.75745257452576,
+  "expectancy_per_trade": -13.140398550724637,
+  "max_single_win": 3063,
+  "max_single_loss_abs": 499,
+  "max_consecutive_wins": 6,
+  "max_consecutive_losses": 13,
+  "max_drawdown_pips": -15927
+}

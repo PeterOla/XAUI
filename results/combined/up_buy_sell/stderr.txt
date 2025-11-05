@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "C:\Users\Olale\Documents\Codebase\XAUi\twelvedata\base_strategy.py", line 657, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "C:\Users\Olale\Documents\Codebase\XAUi\twelvedata\base_strategy.py", line 545, in main
+    print(f"\u2705 Backtest complete — {len(results)} trades executed.")
+  File "C:\Users\Olale\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2705' in position 0: character maps to <undefined>

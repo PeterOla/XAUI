@@ -1,0 +1,25 @@
+Using input CSV: C:\Users\Olale\Documents\Codebase\XAUi\twelvedata\data\combined_xauusd_1min_full.csv
+âœ… Backtest complete â€” 4706 trades executed.
+                 entry_time                 exit_time  ...   final_stop         pips
+0 2015-01-02 13:19:00+00:00 2015-01-02 13:47:00+00:00  ...  1174.180910   154.008961
+1 2015-01-02 13:49:00+00:00 2015-01-02 14:02:00+00:00  ...  1172.047073  -314.492681
+2 2015-01-02 14:05:00+00:00 2015-01-02 15:00:00+00:00  ...  1172.904620  -183.262010
+3 2015-01-02 15:02:00+00:00 2015-01-02 15:55:00+00:00  ...  1186.595812  1368.381154
+4 2015-01-05 13:30:00+00:00 2015-01-05 15:45:00+00:00  ...  1198.768830   317.782981
+
+[5 rows x 7 columns]
+Total Pips: 23973.3
+
+Performance Summary:
+- Total trades: 4706
+- Win rate: 35.40%
+- Average trade: 5.1 pips
+- Average win: 299.8 pips
+- Average loss: -156.4 pips
+- Best trade: 3228.0 pips
+- Worst trade: -517.9 pips
+- Profit factor: 1.05
+- Max drawdown: -18451.0 pips
+- Sharpe (per-trade): 0.02
+- Sharpe (annualized ~): 0.32  # approx via sqrt(trades/year)
+Saved simple results to: C:\Users\Olale\Documents\Codebase\XAUi\twelvedata\results\matrix\combined\both_dirs_buy_sell\results_simple_combined_xauusd_1min_full_both_dirs_buy_sell_st10x3.6.csv

@@ -1,0 +1,29 @@
+Best performing slices
+=======================
+
+Weekdays (by net pips):
+- Tuesday: net 19,616 | PF 1.20 | WR 36.47% | n=958
+- Friday: net 15,238 | PF 1.16 | WR 35.09% | n=875
+- Monday: net 1,933 | PF 1.02 | WR 35.63% | n=988
+Weekdays (by PF, n>=20):
+- Tuesday: PF 1.20 | net 19,616 | WR 36.47% | n=958
+- Friday: PF 1.16 | net 15,238 | WR 35.09% | n=875
+- Monday: PF 1.02 | net 1,933 | WR 35.63% | n=988
+
+Months (by net pips):
+- 2022-12: net 7,315 | PF 2.46 | WR 45.24% | n=42
+- 2021-02: net 5,515 | PF 2.07 | WR 40.00% | n=35
+- 2016-02: net 5,239 | PF 2.58 | WR 48.72% | n=39
+Months (by PF, n>=20):
+- 2020-02: PF 2.88 | net 4,790 | WR 43.24% | n=37
+- 2016-10: PF 2.69 | net 2,463 | WR 60.61% | n=33
+- 2016-02: PF 2.58 | net 5,239 | WR 48.72% | n=39
+
+Hours (by net pips):
+- 13.0: net 15,565 | PF 1.08 | WR 34.13% | n=1714
+- 14.0: net 5,729 | PF 1.04 | WR 35.26% | n=1510
+- 15.0: net 2,694 | PF 1.02 | WR 36.98% | n=1482
+Hours (by PF, n>=20):
+- 13.0: PF 1.08 | net 15,565 | WR 34.13% | n=1714
+- 14.0: PF 1.04 | net 5,729 | WR 35.26% | n=1510
+- 15.0: PF 1.02 | net 2,694 | WR 36.98% | n=1482

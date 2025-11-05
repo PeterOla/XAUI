@@ -1,0 +1,35 @@
+# Data files (too large for repo)
+data/*.csv
+data/*.json
+data/*.parquet
+
+# Python virtual environment
+.venv/
+
+# Output and report files
+out/
+metrics.json
+monthly_breakdown.csv
+top_trades.csv
+equity_curve.png
+outcomes_hist.png
+monthly_net.png
+rolling_metrics.png
+high_win_trades.csv
+high_win_days.csv
+
+# Jupyter and notebook files
+*.ipynb
+.ipynb_checkpoints/
+
+# OS and editor files
+.DS_Store
+*.swp
+*.swo
+__pycache__/
+*.pyc
+*.pyo
+*.log
+
+# VS Code
+.vscode/

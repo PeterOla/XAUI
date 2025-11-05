@@ -1,0 +1,6 @@
+C:/Users/Olale/Documents/Codebase/XAUi/.venv/Scripts/python.exe research/analyze_trades.py 
+--input "twelvedata/results/matrix/combined/up_buy_sell/results_simple_combined_xauusd_1min_full_up_buy_sell_st10x3.6.csv" 
+--out "twelvedata/results/matrix/combined/up_buy_only/research/tier1.1" 
+--hour-buckets 1 
+--side-only long --entry-hour 13 
+--weekdays "Tuesday,Wednesday" --months "February,October,December"  

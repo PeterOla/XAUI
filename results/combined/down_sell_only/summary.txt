@@ -1,0 +1,26 @@
+Using input CSV: C:\Users\Olale\Documents\Codebase\XAUi\twelvedata\data\combined_xauusd_1min_full.csv
+Default trend filter loaded from twelvedata\data\ema200_trend_by_date.csv: 2155 down days
+âœ… Backtest complete â€” 1110 trades executed.
+                 entry_time                 exit_time  ...   final_stop        pips
+0 2015-01-02 13:19:00+00:00 2015-01-02 13:47:00+00:00  ...  1174.180910  154.008961
+1 2015-01-02 14:05:00+00:00 2015-01-02 15:00:00+00:00  ...  1172.904620 -183.262010
+2 2015-01-05 15:47:00+00:00 2015-01-05 17:03:00+00:00  ...  1197.094470   91.653004
+3 2015-01-08 15:56:00+00:00 2015-01-08 16:28:00+00:00  ...  1213.923667 -108.266666
+4 2015-01-14 14:26:00+00:00 2015-01-14 14:31:00+00:00  ...  1241.909284 -319.128414
+
+[5 rows x 7 columns]
+Total Pips: 6226.4
+
+Performance Summary:
+- Total trades: 1110
+- Win rate: 36.49%
+- Average trade: 5.6 pips
+- Average win: 290.8 pips
+- Average loss: -158.2 pips
+- Best trade: 3228.0 pips
+- Worst trade: -512.0 pips
+- Profit factor: 1.06
+- Max drawdown: -9920.4 pips
+- Sharpe (per-trade): 0.02
+- Sharpe (annualized ~): 0.17  # approx via sqrt(trades/year)
+Saved simple results to: C:\Users\Olale\Documents\Codebase\XAUi\twelvedata\results\matrix\combined\down_sell_only\results_simple_combined_xauusd_1min_full_down_sell_only_st10x3.6.csv

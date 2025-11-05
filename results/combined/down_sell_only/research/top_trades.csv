@@ -1,0 +1,21 @@
+Date,Market,Result,Pip,Trend,Price 13:00,Price 16:00,Open Price,__row,Outcome,__kind
+2020-02-28,XAUUSD,Profit,3228,Downtrend,,,,541,win,top_winner
+2021-02-26,XAUUSD,Profit,2557,Downtrend,,,,651,win,top_winner
+2021-02-04,XAUUSD,Profit,2409,Downtrend,,,,641,win,top_winner
+2025-04-08,XAUUSD,Profit,2250,Downtrend,,,,1083,win,top_winner
+2023-09-29,XAUUSD,Profit,1955,Downtrend,,,,964,win,top_winner
+2019-11-07,XAUUSD,Profit,1873,Downtrend,,,,513,win,top_winner
+2015-02-06,XAUUSD,Profit,1747,Downtrend,,,,12,win,top_winner
+2022-02-28,XAUUSD,Profit,1501,Downtrend,,,,771,win,top_winner
+2019-09-30,XAUUSD,Profit,1392,Downtrend,,,,500,win,top_winner
+2015-01-29,XAUUSD,Profit,1355,Downtrend,,,,9,win,top_winner
+2023-05-23,XAUUSD,Loss,-512,Downtrend,,,,917,loss,top_loser
+2020-08-13,XAUUSD,Loss,-507,Downtrend,,,,577,loss,top_loser
+2025-03-10,XAUUSD,Loss,-506,Downtrend,,,,1081,loss,top_loser
+2020-09-22,XAUUSD,Loss,-473,Downtrend,,,,587,loss,top_loser
+2022-06-30,XAUUSD,Loss,-465,Downtrend,,,,818,loss,top_loser
+2023-12-08,XAUUSD,Loss,-457,Downtrend,,,,979,loss,top_loser
+2023-12-08,XAUUSD,Loss,-445,Downtrend,,,,981,loss,top_loser
+2020-10-15,XAUUSD,Loss,-444,Downtrend,,,,597,loss,top_loser
+2023-02-10,XAUUSD,Loss,-444,Downtrend,,,,879,loss,top_loser
+2022-06-24,XAUUSD,Loss,-443,Downtrend,,,,815,loss,top_loser

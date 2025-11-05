@@ -1,0 +1,54 @@
+XAUUSD Trade Analysis Report
+=================================
+
+Key Performance (breakevens excluded from W/L):
+- Total trades: 46
+- Breakevens: 1
+- Evaluated trades: 45
+- Wins / Losses: 18 / 27 (Win rate: 40.00%)
+- Gross gains: 12,328 pips
+- Gross losses: 3,301 pips
+- Net: 9,027 pips
+- Profit factor: 3.73
+- Average win: 684.9 pips
+- Average loss: 122.3 pips
+- Expectancy: 200.6 pips/trade
+- Max single win: 3,166 pips
+- Max single loss: 317 pips
+- Max consecutive wins: 3
+- Max consecutive losses: 4
+- Max drawdown (pips): -797
+
+Return Concentration:
+- Top 10 wins total: 11,626 pips
+- Share of gross gains: 94.3%
+- Share of net pips: 128.8%
+
+Monthly Net Pips:
+- 2015-10: -219
+- 2015-12: -208
+- 2016-02: 1,036
+- 2016-12: 394
+- 2017-02: 71
+- 2017-12: -122
+- 2018-02: 1,813
+- 2018-10: -220
+- 2018-12: -161
+- 2019-02: 92
+- 2019-10: -94
+- 2019-12: -18
+- 2020-02: -150
+- 2020-12: -246
+- 2021-10: 2,666
+- 2021-12: -204
+- 2022-02: 281
+- 2022-10: -22
+- 2022-12: 3,246
+- 2023-02: -227
+- 2023-10: -184
+- 2023-12: 233
+- 2024-02: -14
+- 2024-10: 970
+- 2024-12: 631
+- 2025-02: -317
+

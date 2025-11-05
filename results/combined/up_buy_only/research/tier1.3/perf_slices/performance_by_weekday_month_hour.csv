@@ -1,0 +1,3 @@
+Weekday,MonthNum,Month,Hour,total_trades,breakevens,evaluated_trades,win_rate,net_pips,profit_factor,avg_pips
+Tuesday,10,October,13,7.0,1.0,6.0,0.3333333333333333,710.0,2.719128329297821,101.42857142857143
+Wednesday,10,October,13,5.0,0.0,5.0,0.2,2187.0,5.565762004175365,437.4
