@@ -19,14 +19,14 @@ python scripts/base_strategy.py --input-csv data/your_data_file.csv --entry-hour
 
 This will:
 - Run the SuperTrend strategy on your data
-- Output results to `results/` directory (full trade CSV, simplified CSV, and interactive HTML plot)
+- Output results to `results/trends/` directory (full trade CSV, simplified CSV, and interactive HTML plot)
 - Apply entry hours filter (13-16 UTC) and trend filter by default
 
 ## EMA200 Daily Trend Filter
 
 The strategy includes an optional EMA200-based daily trend filter:
 
-- **Trend file format**: `data/ema200_trend_by_date.csv` with columns `date,trend` where trend ∈ {Up, Down}
+-- **Trend file format**: `data/trend/ema200_trend_by_date_1m.csv` (default alias) with columns `date,trend` where trend ∈ {Up, Down}
 - **How it's computed**:
   - Resample 1‑minute Close to 15‑minute intervals
   - Compute EMA200 on the 15‑minute Close prices
@@ -35,8 +35,16 @@ The strategy includes an optional EMA200-based daily trend filter:
 
 - **Generate trend file**:
 ```powershell
-python scripts/generate_ema200_trend.py --input-csv data/your_data_file.csv
+# Generate six timeframes and write a 1m compatibility alias under data/trend/
+python scripts/generate_ema200_trend.py --input-csv data/your_data_file.csv --resamples 1m,5m,15m,30m,1h,4h --out-csv data/trend/ema200_trend_by_date_1m.csv
 ```
+Generated files:
+- `data/trend/ema200_trend_by_date_5m.csv`
+- `data/trend/ema200_trend_by_date_15m.csv`
+- `data/trend/ema200_trend_by_date_30m.csv`
+- `data/trend/ema200_trend_by_date_1h.csv`
+- `data/trend/ema200_trend_by_date_4h.csv`
+- `data/trend/ema200_trend_by_date_1m.csv` (also written as the compatibility alias when provided via --out-csv)
 
 - **Usage in strategy**:
   - Auto-loaded by default; disable with `--no-trend-filter`
@@ -71,12 +79,17 @@ Key parameters:
 
 ## Output Files
 
-The strategy generates several output files in the `results/` directory:
+The strategy generates output per timeframe under `results/trends/<timeframe>/` (default timeframe: 1m):
 
-1. **Full Results CSV**: Complete trade details with entry/exit times, prices, and performance
-2. **Simple Results CSV**: Condensed version with key metrics
-3. **Interactive Plot**: HTML file with candlestick chart, SuperTrend line, and trade markers
-4. **Performance Summary**: Console output with key statistics
+For example, for `--timeframe 1m`:
+- `results/trends/1m/trades.csv`
+- `results/trends/1m/trades_simple.csv`
+- `results/trends/1m/plot.html`
+- `results/trends/1m/latest.html`
+
+Notes:
+- You can tag filenames using `--run-tag mytag` which appends suffixes like `trades_mytag.csv`.
+- Override the base output directory with `--out-dir` (the timeframe subfolder is appended automatically).
 
 ## Technical Notes
 
@@ -91,8 +104,8 @@ The strategy generates several output files in the `results/` directory:
 ├── scripts/
 │   ├── base_strategy.py          # Main strategy implementation
 │   └── generate_ema200_trend.py  # EMA200 trend file generator
-├── data/                         # Place your CSV files here (gitignored)
-├── results/                      # Strategy output files
+├── data/                         # Place your CSV files here (gitignored). Trend outputs are under data/trend/
+├── results/trends/               # Strategy outputs grouped by timeframe (e.g., 1m/, 5m/)
 └── README.md                     # This file
 ```
 

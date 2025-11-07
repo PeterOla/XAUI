@@ -2,6 +2,10 @@
 data/*.csv
 data/*.json
 data/*.parquet
+# Recurse into subfolders under data/
+data/**/*.csv
+data/**/*.json
+data/**/*.parquet
 
 # Python virtual environment
 .venv/

@@ -24,8 +24,8 @@ class StrategyConfig:
     filter_days: Optional[set] = None  # set of allowed dates (datetime.date)
     allowed_sides: Optional[set] = None  # {"long","short"} or None for both
 
-# Default output directory for results and plots
-DEFAULT_OUT_DIR = os.path.join("results")
+# Default output directory for results and plots (store run outputs under results/trends by default)
+DEFAULT_OUT_DIR = os.path.join("results", "trends")
 
 def rma(series: pd.Series, length: int) -> pd.Series:
     """Pine RMA: EMA with alpha = 1/length, seeded by SMA."""
@@ -280,6 +280,7 @@ def plot_supertrend(
     cap_pips: Optional[float] = None,
     entry_hours: Optional[Tuple[int, int]] = None,
     pip_size: float = 0.01,
+    lite: bool = False,
 ) -> None:
     dfi = df.copy()
     dfi["timestamp"] = pd.to_datetime(dfi["timestamp"], utc=True)
@@ -287,14 +288,14 @@ def plot_supertrend(
     dfi = dfi.sort_index()
 
     PIP_FACTOR = 1.0 / pip_size
-    dfi["body_pips"] = (dfi["Close"] - dfi["Open"]).abs() * PIP_FACTOR
-
-    tr1 = (dfi["High"] - dfi["Low"]).abs()
-    tr2 = (dfi["High"] - dfi["Close"].shift(1)).abs()
-    tr3 = (dfi["Low"] - dfi["Close"].shift(1)).abs()
-    dfi["true_range"] = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
-    atr_period = 14
-    dfi["atr_pips"] = dfi["true_range"].rolling(window=atr_period).mean() * PIP_FACTOR
+    if not lite:
+        dfi["body_pips"] = (dfi["Close"] - dfi["Open"]).abs() * PIP_FACTOR
+        tr1 = (dfi["High"] - dfi["Low"]).abs()
+        tr2 = (dfi["High"] - dfi["Close"].shift(1)).abs()
+        tr3 = (dfi["Low"] - dfi["Close"].shift(1)).abs()
+        dfi["true_range"] = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+        atr_period = 14
+        dfi["atr_pips"] = dfi["true_range"].rolling(window=atr_period).mean() * PIP_FACTOR
 
     flips = dfi.get("direction")
     if flips is not None:
@@ -308,7 +309,10 @@ def plot_supertrend(
         h0, h1 = entry_hours
         in_window = pd.Series([(h0 <= t.hour < h1) for t in dfi.index], index=dfi.index)
 
-    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.04, row_heights=[0.72, 0.28])
+    if lite:
+        fig = make_subplots(rows=1, cols=1, shared_xaxes=True)
+    else:
+        fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.04, row_heights=[0.72, 0.28])
 
     st_series = dfi.get("supertrend", pd.Series([np.nan] * len(dfi), index=dfi.index))
     fig.add_trace(
@@ -318,7 +322,7 @@ def plot_supertrend(
             increasing_line_color="#26a69a", decreasing_line_color="#ef5350",
             increasing_fillcolor="#26a69a", decreasing_fillcolor="#ef5350",
             showlegend=False,
-            hovertext=[
+            hovertext=None if lite else [
                 (
                     f"{ts:%Y-%m-%d %H:%M} UTC\n"
                     f"O:{o:.2f} H:{h:.2f} L:{l:.2f} C:{c:.2f}\n"
@@ -331,11 +335,12 @@ def plot_supertrend(
                     dfi.index,
                     dfi["Open"], dfi["High"], dfi["Low"], dfi["Close"],
                     st_series,
-                    dfi["body_pips"], dfi["atr_pips"],
+                    (dfi["body_pips"] if not lite else [np.nan]*len(dfi)),
+                    (dfi["atr_pips"] if not lite else [np.nan]*len(dfi)),
                     flips, in_window,
                 )
             ],
-            hoverinfo="text",
+            hoverinfo="none" if lite else "text",
         ), row=1, col=1,
     )
 
@@ -363,7 +368,7 @@ def plot_supertrend(
             ), row=1, col=1,
         )
 
-    if "supertrend" in dfi.columns:
+    if not lite and "supertrend" in dfi.columns:
         dist_signed = (dfi["Close"] - dfi["supertrend"]) * PIP_FACTOR
         dist_abs = dist_signed.abs()
         fig.add_trace(go.Scatter(x=dfi.index, y=dist_signed, mode="lines", name="Dist to ST (pips)", line=dict(color="#64b5f6", width=1.5)), row=2, col=1)
@@ -399,9 +404,10 @@ def plot_supertrend(
         xaxis_rangeslider_visible=False,
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         margin=dict(l=50, r=30, t=60, b=40),
-        updatemenus=[dict(type="dropdown", direction="down", buttons=buttons, showactive=True, x=0, y=1.1, xanchor="left", yanchor="top")],
+        updatemenus=None if lite else [dict(type="dropdown", direction="down", buttons=buttons, showactive=True, x=0, y=1.1, xanchor="left", yanchor="top")],
     )
-    fig.update_yaxes(title_text="Dist to ST (pips)", row=2, col=1)
+    if not lite:
+        fig.update_yaxes(title_text="Dist to ST (pips)", row=2, col=1)
 
     os.makedirs(os.path.dirname(out_html), exist_ok=True)
     config = {"scrollZoom": True, "displaylogo": False, "modeBarButtonsToRemove": ["lasso2d", "select2d"]}
@@ -412,8 +418,13 @@ def main(argv=None):
     import argparse
 
     parser = argparse.ArgumentParser(description="Minimal SuperTrend strategy using XAUUSD CSVs.")
-    # Default to the canonical full dataset if available
-    default_input_csv = os.path.join("data", "combined_xauusd_1min_full.csv")
+    # Default input CSV candidates (prefer user's absolute path, then relative fallbacks)
+    default_input_candidates = [
+        r"C:\\Users\\Olale\\Documents\\Codebase\\Quant\\XAUI\\data\\twelvedata_xauusd_1min_full.csv",
+        os.path.join("data", "twelvedata_xauusd_1min_full.csv"),
+        os.path.join("data", "combined_xauusd_1min_full.csv"),
+    ]
+    default_input_csv = next((p for p in default_input_candidates if os.path.exists(p)), default_input_candidates[0])
     parser.add_argument(
         "--input-csv",
         required=False,
@@ -424,8 +435,11 @@ def main(argv=None):
     parser.add_argument("--st-multiplier", type=float, default=3.6)
     parser.add_argument("--max-sl-distance-pips", type=float, default=520.0)
     parser.add_argument("--entry-hours", default="13-16", help="UTC hour window, e.g., 13-16; or 'all'")
-    parser.add_argument("--out-dir", default=DEFAULT_OUT_DIR, help=f"Output directory for results and plots (default: {DEFAULT_OUT_DIR})")
+    parser.add_argument("--out-dir", default=DEFAULT_OUT_DIR, help=f"Base output directory (default: {DEFAULT_OUT_DIR}); timeframe subfolder will be appended if using --timeframe")
+    parser.add_argument("--timeframe", default="1m", help="Timeframe label for output subfolder (e.g. 1m,5m,15m). Default: 1m")
     parser.add_argument("--plot", action="store_true", help="Save an interactive HTML plot alongside results")
+    parser.add_argument("--plot-lite", action="store_true", help="Faster plot: single panel, minimal hover, no distance metrics")
+    parser.add_argument("--plot-latest-only", action="store_true", help="Only write latest.html (skip named plot_<tag>.html)")
     parser.add_argument(
         "--plot-html",
         default=None,
@@ -435,9 +449,12 @@ def main(argv=None):
     parser.add_argument("--no-trend-filter", action="store_true", help="Disable the default EMA200 per-day Up trend filter (if present)")
     parser.add_argument("--max-rows", type=int, default=None, help="Optional: limit number of rows read from input for a fast smoke test")
     parser.add_argument("--trend", choices=["up", "down", "both"], default="up", help="Which trend to trade when using the EMA200 trend file (default: up)")
-    parser.add_argument("--long-only", action="store_true", help="Only take long trades")
+    parser.add_argument("--trend-tfs", default=None, help="Comma-separated list of timeframe trend files to require simultaneously (e.g., '1m,5m,15m'). Uses intersection of allowed days.")
+    parser.add_argument("--long-only", action="store_true", help="Only take long trades (default behavior if no side is specified)")
     parser.add_argument("--short-only", action="store_true", help="Only take short trades")
     parser.add_argument("--run-tag", default="", help="Optional tag appended to output filenames (e.g., 'up_buy_only')")
+    parser.add_argument("--date-start", default=None, help="Optional start date (UTC, YYYY-MM-DD) to filter input rows")
+    parser.add_argument("--date-end", default=None, help="Optional end date (UTC, YYYY-MM-DD, inclusive) to filter input rows")
     
     args = parser.parse_args(argv)
 
@@ -454,6 +471,28 @@ def main(argv=None):
         raise SystemExit(f"Input CSV not found: {args.input_csv}. Provide --input-csv or ensure the default exists.")
     print(f"Using input CSV: {args.input_csv}")
     df = pd.read_csv(args.input_csv)
+    # Date range filtering (applied before any other filtering)
+    if args.date_start or args.date_end:
+        try:
+            ts = pd.to_datetime(df["timestamp"], utc=True, errors="coerce")
+            mask = pd.Series(True, index=df.index)
+            if args.date_start:
+                start_ts = pd.to_datetime(args.date_start).tz_localize("UTC") if pd.to_datetime(args.date_start).tzinfo is None else pd.to_datetime(args.date_start).tz_convert("UTC")
+                mask &= ts >= start_ts
+            if args.date_end:
+                # inclusive end: add 1 day and use <
+                end_ts = pd.to_datetime(args.date_end)
+                if end_ts.tzinfo is None:
+                    end_ts = end_ts.tz_localize("UTC")
+                else:
+                    end_ts = end_ts.tz_convert("UTC")
+                end_excl = end_ts + pd.Timedelta(days=1)
+                mask &= ts < end_excl
+            before = len(df)
+            df = df.loc[mask].copy()
+            print(f"Date filter applied: {args.date_start or '-'} to {args.date_end or '-'} — {before} -> {len(df)} rows")
+        except Exception as e:
+            print(f"⚠️ Failed to apply date filter: {e}")
     if args.max_rows is not None and args.max_rows > 0:
         df = df.head(args.max_rows)
         print(f"Limiting to first {len(df)} rows for quick test (--max-rows)")
@@ -489,40 +528,75 @@ def main(argv=None):
         except Exception as e:
             print(f"⚠️ Failed to load filter CSV {args.filter_csv}: {e}")
 
-    # If no explicit filter was provided, attempt to load the default EMA200 trend file and
-    # only allow dates labeled 'Up'. This makes Up-days the default trading universe.
+    # Build filter_days from trend files if not explicitly provided
     if filter_days is None and not args.no_trend_filter:
-        default_trend = os.path.join("data", "ema200_trend_by_date.csv")
-        if os.path.exists(default_trend):
+        def load_days_from_tf(tf_label: str) -> Optional[set]:
+            tf_label = tf_label.strip().lower()
+            tf_file = os.path.join("data", "trend", f"ema200_trend_by_date_{tf_label}.csv")
+            if not os.path.exists(tf_file):
+                print(f"⚠️ Trend file not found for timeframe '{tf_label}': {tf_file}")
+                return None
             try:
-                fdf = pd.read_csv(default_trend)
+                fdf = pd.read_csv(tf_file)
                 date_col = "date" if "date" in fdf.columns else ("Date" if "Date" in fdf.columns else None)
-                if date_col and "trend" in fdf.columns:
-                    ts = pd.to_datetime(fdf[date_col], utc=True, errors="coerce").dt.date
-                    trend_vals = fdf["trend"].astype(str).str.strip().str.lower()
-                    if args.trend == "up":
-                        sel = trend_vals == "up"
-                    elif args.trend == "down":
-                        sel = trend_vals == "down"
-                    else:
-                        sel = pd.Series(True, index=trend_vals.index)
-                    filter_days = set(ts[sel].dropna().unique().tolist())
-                    print(f"Default trend filter loaded from {default_trend}: {len(filter_days)} {args.trend} days")
+                if not date_col or "trend" not in fdf.columns:
+                    print(f"⚠️ Trend file missing columns (date/trend): {tf_file}")
+                    return None
+                ts = pd.to_datetime(fdf[date_col], utc=True, errors="coerce").dt.date
+                tvals = fdf["trend"].astype(str).str.strip().str.lower()
+                if args.trend == "up":
+                    sel = tvals == "up"
+                elif args.trend == "down":
+                    sel = tvals == "down"
                 else:
-                    print(f"Default trend file {default_trend} missing required columns; skipping default filter")
+                    sel = pd.Series(True, index=tvals.index)
+                return set(ts[sel].dropna().unique().tolist())
             except Exception as e:
-                print(f"⚠️ Failed to load default trend file {default_trend}: {e}")
+                print(f"⚠️ Failed loading trend file {tf_file}: {e}")
+                return None
+
+        if args.trend_tfs:
+            tf_list = [s for s in args.trend_tfs.split(',') if s.strip()]
+            sets = []
+            for tf_label in tf_list:
+                s = load_days_from_tf(tf_label)
+                if s is None:
+                    print(f"⚠️ Skipping timeframe '{tf_label}' due to missing/invalid file.")
+                    continue
+                print(f"Loaded trend days ({args.trend}) from {tf_label}: {len(s)} days")
+                sets.append(s)
+            if sets:
+                inter = sets[0].copy()
+                for s in sets[1:]:
+                    inter &= s
+                filter_days = inter
+                print(f"Combined trend filter (ALL of {','.join(tf_list)}) => {len(filter_days)} days")
+            else:
+                print("No valid trend files loaded for --trend-tfs; no default date filter applied")
         else:
-            print(f"Default trend file not found at {default_trend}; no default date filter applied")
+            # Single timeframe behavior (backward compatible): use --timeframe, fallback to 1m
+            tf = (args.timeframe or "1m").strip().lower()
+            s = load_days_from_tf(tf)
+            if s is None:
+                s = load_days_from_tf("1m")
+            if s is not None:
+                filter_days = s
+                print(f"Default trend filter loaded for {tf}: {len(filter_days)} {args.trend} days")
+            else:
+                print("No default trend file found; no default date filter applied")
 
     # Sides filtering
     if args.long_only and args.short_only:
         raise SystemExit("--long-only and --short-only cannot be used together")
-    allowed_sides = None
-    if args.long_only:
+    # Default to long-only when neither flag is provided (up_buy_only default)
+    if not args.long_only and not args.short_only:
+        allowed_sides = {"long"}
+    elif args.long_only:
         allowed_sides = {"long"}
     elif args.short_only:
         allowed_sides = {"short"}
+    else:
+        allowed_sides = None
 
     cfg = StrategyConfig(
         st_length=args.st_length,
@@ -535,10 +609,29 @@ def main(argv=None):
 
     results = backtest_supertrend(df, cfg)
 
-    os.makedirs(args.out_dir, exist_ok=True)
+    # Derive final output directory: append timeframe subfolder if user kept the default base out-dir or if they requested it explicitly.
+    final_out_dir = args.out_dir
+    # If combining multiple trend TFs, store under a combo folder; else use timeframe folder
+    combo_label = None
+    if args.trend_tfs:
+        tf_list = sorted([s.strip().lower() for s in args.trend_tfs.split(',') if s.strip()])
+        combo_label = f"combo_{'_'.join(tf_list)}"
+        final_out_dir = os.path.join(final_out_dir, combo_label)
+    elif args.timeframe and args.timeframe.strip():
+        tf = args.timeframe.strip()
+        if not final_out_dir.endswith(tf):
+            final_out_dir = os.path.join(final_out_dir, tf)
+    os.makedirs(final_out_dir, exist_ok=True)
+
     base = os.path.splitext(os.path.basename(args.input_csv))[0]
-    tag = f"_{args.run_tag}" if args.run_tag else ""
-    out_csv = os.path.join(args.out_dir, f"results_{base}{tag}_st{cfg.st_length}x{cfg.st_multiplier}.csv")
+    # If user did not provide a run tag and defaults imply Up + Long-only, set a helpful default tag
+    implied_up = (args.trend == "up")
+    implied_long_only = (allowed_sides == {"long"})
+    auto_tag = "up_buy_only" if (implied_up and implied_long_only) else ""
+    tag = f"_{args.run_tag}" if args.run_tag else (f"_{auto_tag}" if auto_tag else "")
+    # New naming convention inside timeframe folder: trades(.csv), trades_simple(.csv), plot.html
+    trades_filename = f"trades{tag}.csv" if tag else "trades.csv"
+    out_csv = os.path.join(final_out_dir, trades_filename)
     results.to_csv(out_csv, index=False)
 
     # Enhanced post-backtest summary (prints detailed performance and saves a compact CSV)
@@ -611,7 +704,8 @@ def main(argv=None):
             # Format entry_time for compact CSV
             if 'entry_time' in simplified_df.columns:
                 simplified_df['entry_time'] = pd.to_datetime(simplified_df['entry_time'], utc=True).dt.strftime("%Y-%m-%d %H:%M")
-            simple_path = os.path.join(args.out_dir, f"results_simple_{base}{tag}_st{cfg.st_length}x{cfg.st_multiplier}.csv")
+            simple_name = f"trades_simple{tag}.csv" if tag else "trades_simple.csv"
+            simple_path = os.path.join(final_out_dir, simple_name)
             simplified_df.to_csv(simple_path, index=False)
             print(f"Saved simple results to: {simple_path}")
         except Exception as e:
@@ -628,27 +722,40 @@ def main(argv=None):
         dir_plot, st_plot = compute_supertrend(df_idx, cfg.st_length, cfg.st_multiplier)
         df_plot["supertrend"] = st_plot.values
         df_plot["direction"] = dir_plot.values
-
-        out_html = args.plot_html or os.path.join(args.out_dir, f"plot_{base}{tag}_st{cfg.st_length}x{cfg.st_multiplier}.html")
-        plot_supertrend(
-            df_plot,
-            results,
-            out_html,
-            title=f"{base} — ST {cfg.st_length} x {cfg.st_multiplier}{(' — ' + args.run_tag) if args.run_tag else ''}",
-            cap_pips=cfg.max_sl_distance_pips,
-            entry_hours=entry_hours,
-            pip_size=cfg.pip_size,
-        )
-        print(f"Saved plot to: {out_html}")
-
-        # Also save the newest plot as latest.html (actual plot content, no redirect)
-        latest_path = os.path.join(args.out_dir, "latest.html")
-        try:
-            with open(out_html, "r", encoding="utf-8") as src, open(latest_path, "w", encoding="utf-8") as dst:
-                dst.write(src.read())
-            print(f"Saved latest plot to: {latest_path}")
-        except Exception as e:
-            print(f"⚠️ Failed to write latest.html: {e}")
+        if args.plot_latest_only:
+            latest_path = os.path.join(final_out_dir, "latest.html")
+            plot_supertrend(
+                df_plot,
+                results,
+                latest_path,
+                title=f"{base} — ST {cfg.st_length} x {cfg.st_multiplier}{(' — ' + args.run_tag) if args.run_tag else ''}",
+                cap_pips=None if args.plot_lite else cfg.max_sl_distance_pips,
+                entry_hours=entry_hours,
+                pip_size=cfg.pip_size,
+                lite=args.plot_lite,
+            )
+            print(f"Saved latest (only) plot to: {latest_path}")
+        else:
+            plot_name = f"plot{tag}.html" if tag else "plot.html"
+            out_html = args.plot_html or os.path.join(final_out_dir, plot_name)
+            plot_supertrend(
+                df_plot,
+                results,
+                out_html,
+                title=f"{base} — ST {cfg.st_length} x {cfg.st_multiplier}{(' — ' + args.run_tag) if args.run_tag else ''}",
+                cap_pips=None if args.plot_lite else cfg.max_sl_distance_pips,
+                entry_hours=entry_hours,
+                pip_size=cfg.pip_size,
+                lite=args.plot_lite,
+            )
+            print(f"Saved plot to: {out_html}")
+            latest_path = os.path.join(final_out_dir, "latest.html")
+            try:
+                with open(out_html, "r", encoding="utf-8") as src, open(latest_path, "w", encoding="utf-8") as dst:
+                    dst.write(src.read())
+                print(f"Saved latest plot to: {latest_path}")
+            except Exception as e:
+                print(f"⚠️ Failed to write latest.html: {e}")
 
     
 
