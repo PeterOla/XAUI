@@ -9,8 +9,7 @@ from typing import Optional, Tuple
 
 import numpy as np
 import pandas as pd
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
+# Plotly is optional; only required when --plot is used. Imported lazily in plot_supertrend.
  
 
 
@@ -282,6 +281,12 @@ def plot_supertrend(
     pip_size: float = 0.01,
     lite: bool = False,
 ) -> None:
+    # Lazy import to keep plotly optional when not plotting.
+    try:
+        import plotly.graph_objects as go  # type: ignore
+        from plotly.subplots import make_subplots  # type: ignore
+    except ImportError:
+        raise SystemExit("Plotly is required for --plot; install with 'pip install plotly'.")
     dfi = df.copy()
     dfi["timestamp"] = pd.to_datetime(dfi["timestamp"], utc=True)
     dfi.set_index("timestamp", inplace=True)
@@ -450,6 +455,15 @@ def main(argv=None):
     parser.add_argument("--max-rows", type=int, default=None, help="Optional: limit number of rows read from input for a fast smoke test")
     parser.add_argument("--trend", choices=["up", "down", "both"], default="up", help="Which trend to trade when using the EMA200 trend file (default: up)")
     parser.add_argument("--trend-tfs", default=None, help="Comma-separated list of timeframe trend files to require simultaneously (e.g., '1m,5m,15m'). Uses intersection of allowed days.")
+    parser.add_argument(
+        "--trend-min-k",
+        type=int,
+        default=None,
+        help=(
+            "When using --trend-tfs, require at least K of the provided timeframes to match the --trend per day. "
+            "Example: --trend-tfs 1m,5m,15m --trend-min-k 2 will allow days where at least 2 of {1m,5m,15m} are Up."
+        ),
+    )
     parser.add_argument("--long-only", action="store_true", help="Only take long trades (default behavior if no side is specified)")
     parser.add_argument("--short-only", action="store_true", help="Only take short trades")
     parser.add_argument("--run-tag", default="", help="Optional tag appended to output filenames (e.g., 'up_buy_only')")
@@ -566,11 +580,32 @@ def main(argv=None):
                 print(f"Loaded trend days ({args.trend}) from {tf_label}: {len(s)} days")
                 sets.append(s)
             if sets:
-                inter = sets[0].copy()
-                for s in sets[1:]:
-                    inter &= s
-                filter_days = inter
-                print(f"Combined trend filter (ALL of {','.join(tf_list)}) => {len(filter_days)} days")
+                # If --trend-min-k provided, use K-of-N (at least K TFs agree). Otherwise, require ALL (intersection).
+                if args.trend_min_k is not None:
+                    K = int(args.trend_min_k)
+                    N = len(sets)
+                    if K < 1:
+                        print(f"⚠️ --trend-min-k {K} < 1; clamping to 1")
+                        K = 1
+                    if K > N:
+                        print(f"⚠️ --trend-min-k {K} > number of valid TF files {N}; clamping to {N}")
+                        K = N
+
+                    # Build day -> count across TF sets
+                    from collections import Counter
+                    cnt = Counter()
+                    for s in sets:
+                        for d in s:
+                            cnt[d] += 1
+                    koN_days = {d for d, c in cnt.items() if c >= K}
+                    filter_days = koN_days
+                    print(f"Combined trend filter (K-of-N: at least {K} of {','.join(tf_list)}) => {len(filter_days)} days")
+                else:
+                    inter = sets[0].copy()
+                    for s in sets[1:]:
+                        inter &= s
+                    filter_days = inter
+                    print(f"Combined trend filter (ALL of {','.join(tf_list)}) => {len(filter_days)} days")
             else:
                 print("No valid trend files loaded for --trend-tfs; no default date filter applied")
         else:
@@ -616,6 +651,10 @@ def main(argv=None):
     if args.trend_tfs:
         tf_list = sorted([s.strip().lower() for s in args.trend_tfs.split(',') if s.strip()])
         combo_label = f"combo_{'_'.join(tf_list)}"
+        # Append k-of-n label if provided to avoid overwriting ALL-of-N runs
+        if args.trend_min_k is not None:
+            # Use number of valid TFs in label (length of tf_list) for clarity
+            combo_label = f"{combo_label}_k{int(args.trend_min_k)}of{len(tf_list)}"
         final_out_dir = os.path.join(final_out_dir, combo_label)
     elif args.timeframe and args.timeframe.strip():
         tf = args.timeframe.strip()

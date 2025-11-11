@@ -12,6 +12,7 @@ def parse_args(argv: List[str]):
     p.add_argument("--min-size", type=int, default=2, help="Minimum combination size (default: 2)")
     p.add_argument("--max-size", type=int, default=None, help="Maximum combination size; default: all")
     p.add_argument("--trend", choices=["up","down","both"], default="up", help="Trend side to require in all TFs")
+    p.add_argument("--trend-min-k", type=int, default=None, help="Pass-through: when set, base_strategy will require at least K of the provided --trend-tfs per day")
     p.add_argument("--input-csv", default=None, help="Pass through to base_strategy --input-csv")
     p.add_argument("--date-start", default=None)
     p.add_argument("--date-end", default=None)
@@ -43,6 +44,8 @@ def main(argv: List[str]) -> int:
         for combo in itertools.combinations(tfs, k):
             combo_str = ",".join(combo)
             cmd = [sys.executable, base_py, "--trend-tfs", combo_str, "--trend", args.trend]
+            if args.trend_min_k is not None:
+                cmd += ["--trend-min-k", str(int(args.trend_min_k))]
             if args.input_csv:
                 cmd += ["--input-csv", args.input_csv]
             if args.date_start:

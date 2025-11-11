@@ -1,5 +1,6 @@
 import os
 import glob
+import re
 import pandas as pd
 import numpy as np
 
@@ -77,6 +78,48 @@ def find_trades_csv(folder: str) -> str | None:
     return matches[0] if matches else None
 
 
+def parse_combo_timeframes(label: str) -> list[str]:
+    """Parse timeframe tokens from a combo folder label like:
+    - combo_1m_5m_15m
+    - combo_1m_15m_k2of2
+    Returns a list of timeframe strings (e.g., ["1m","5m","15m"]).
+    Returns [] if not a combo label.
+    """
+    if not label.startswith("combo_"):
+        return []
+    rest = label[len("combo_") :]
+    tokens = rest.split("_") if rest else []
+    # Drop a trailing kXofN token if present
+    if tokens and re.fullmatch(r"k\d+of\d+", tokens[-1]):
+        tokens = tokens[:-1]
+    # Filter obvious timeframe tokens (defensive)
+    tfs = [t for t in tokens if re.fullmatch(r"(\d+m|\dh)", t)]
+    # If nothing matched the strict pattern, fall back to all tokens (older labels)
+    return tfs if tfs else tokens
+
+
+def load_up_days_for_tf(tf_label: str) -> set:
+    """Load the set of dates (datetime.date) where the given timeframe is Up.
+    Expects files like data/trend/ema200_trend_by_date_<tf>.csv with columns ['date','trend'].
+    Returns empty set on any issue.
+    """
+    tf_label = tf_label.strip().lower()
+    tf_file = os.path.join("data", "trend", f"ema200_trend_by_date_{tf_label}.csv")
+    if not os.path.exists(tf_file):
+        return set()
+    try:
+        fdf = pd.read_csv(tf_file)
+        date_col = "date" if "date" in fdf.columns else ("Date" if "Date" in fdf.columns else None)
+        if not date_col or "trend" not in fdf.columns:
+            return set()
+        ts = pd.to_datetime(fdf[date_col], utc=True, errors="coerce").dt.date
+        tvals = fdf["trend"].astype(str).str.strip().str.lower()
+        ups = ts[(tvals == "up") & ts.notna()]
+        return set(ups.unique().tolist())
+    except Exception:
+        return set()
+
+
 def main():
     base_dir = os.path.join("results", "trends")
 
@@ -89,6 +132,7 @@ def main():
                 subdirs.append(name)
 
     rows = []
+    upcount_rows = []
     for label in sorted(subdirs):
         tf_dir = os.path.join(base_dir, label)
         trades_path = find_trades_csv(tf_dir)
@@ -102,6 +146,38 @@ def main():
         m["timeframe"] = label
         m["file"] = os.path.relpath(trades_path).replace("\\", "/")
         rows.append(m)
+
+        # Up-count bucket metrics for combo folders
+        combo_tfs = parse_combo_timeframes(label)
+        if combo_tfs:
+            # Build per-TF Up-day sets
+            tf_up_sets = {tf: load_up_days_for_tf(tf) for tf in combo_tfs}
+            # Skip if no TF up-sets could be loaded
+            if any(len(s) > 0 for s in tf_up_sets.values()):
+                tmp = df.copy()
+                # Parse entry_time to date
+                et = pd.to_datetime(tmp.get("entry_time"), utc=True, errors="coerce")
+                entry_dates = et.dt.date
+                # Compute up-count per trade (missing/invalid dates count as 0)
+                counts = []
+                for d in entry_dates:
+                    if pd.isna(d):
+                        counts.append(0)
+                        continue
+                    c = 0
+                    for tf, up_set in tf_up_sets.items():
+                        if d in up_set:
+                            c += 1
+                    counts.append(c)
+                tmp["up_count"] = counts
+
+                # Group by up_count and compute metrics per bucket
+                for upc, g in tmp.groupby("up_count"):
+                    gm = compute_metrics(g)
+                    gm["timeframe"] = label
+                    gm["up_count"] = int(upc)
+                    gm["file"] = os.path.relpath(trades_path).replace("\\", "/")
+                    upcount_rows.append(gm)
 
     if not rows:
         print("No timeframe results found to aggregate.")
@@ -132,6 +208,32 @@ def main():
                 f"{r.start if r.start else ''} | {r.end if r.end else ''} |\n"
             )
     print(f"Saved aggregate summary Markdown to: {md_path}")
+
+    # If we computed any up-count bucket rows, write separate summaries
+    if upcount_rows:
+        up_df = pd.DataFrame(upcount_rows)[[
+            "timeframe", "up_count", "total_trades", "wins", "losses", "win_rate", "total_pips",
+            "avg_trade", "avg_win", "avg_loss", "best_trade", "worst_trade",
+            "profit_factor", "max_drawdown", "start", "end", "file"
+        ]]
+        up_df.sort_values(by=["timeframe", "up_count"], inplace=True)
+        up_csv = os.path.join(out_dir, "aggregate_upcount_summary.csv")
+        up_df.to_csv(up_csv, index=False)
+        print(f"Saved up-count aggregate CSV to: {up_csv}")
+
+        up_md = os.path.join(out_dir, "aggregate_upcount_summary.md")
+        with open(up_md, "w", encoding="utf-8") as f:
+            f.write("# Up-count Bucket Summary\n\n")
+            f.write("Higher up_count means more timeframes agreed on 'Up' that day.\n\n")
+            f.write("| Timeframe | Up-count | Trades | Win% | Total Pips | PF | Max DD | Start | End |\n")
+            f.write("|:--|--:|--:|--:|--:|--:|--:|:--|:--|\n")
+            for r in up_df.itertuples(index=False):
+                f.write(
+                    f"| {r.timeframe} | {r.up_count} | {r.total_trades} | {r.win_rate*100:.2f}% | {r.total_pips:.1f} | "
+                    f"{(r.profit_factor if pd.notna(r.profit_factor) else 'n/a')} | {r.max_drawdown:.1f} | "
+                    f"{r.start if r.start else ''} | {r.end if r.end else ''} |\n"
+                )
+        print(f"Saved up-count aggregate Markdown to: {up_md}")
     return 0
 
 
