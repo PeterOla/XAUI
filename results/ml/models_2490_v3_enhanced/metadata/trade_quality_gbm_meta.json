@@ -1,0 +1,105 @@
+{
+  "model_name": "trade_quality_gbm",
+  "model_type": "LightGBM Classifier",
+  "training_date": "2025-11-11T16:16:34.910468",
+  "features_used": [
+    "hour",
+    "dow",
+    "side_encoded",
+    "is_london",
+    "is_ny",
+    "is_overlap",
+    "entry_body_pct",
+    "entry_upper_wick_pct",
+    "entry_lower_wick_pct",
+    "entry_range_atr",
+    "entry_dist_stop_atr",
+    "atr14",
+    "atr_pct",
+    "rsi14",
+    "rsi30",
+    "macd_hist",
+    "bb_pct",
+    "bb_width",
+    "momentum_3",
+    "momentum_10",
+    "dist_ema20_atr",
+    "dist_ema50_atr",
+    "dist_ema200_atr",
+    "above_ema20",
+    "above_ema50",
+    "above_ema200",
+    "recent_range_atr",
+    "recent_body_atr",
+    "recent_momentum",
+    "atr14_5m",
+    "rsi14_5m",
+    "minutes_since_last",
+    "relevant_wick",
+    "side_x_body",
+    "side_x_relevant_wick",
+    "side_x_rsi",
+    "side_x_macd"
+  ],
+  "label": "label_win (pips > 0)",
+  "train_rows": 1743,
+  "val_rows": 373,
+  "test_rows": 374,
+  "hyperparameters": {
+    "num_leaves": 31,
+    "learning_rate": 0.05,
+    "n_estimators": 100
+  },
+  "val_metrics": {
+    "auc": 0.49759161026766663,
+    "precision": 0.4318181818181818,
+    "recall": 0.13380281690140844,
+    "confusion_matrix": [
+      [
+        206,
+        25
+      ],
+      [
+        123,
+        19
+      ]
+    ]
+  },
+  "test_metrics": {
+    "auc": 0.4711328314715882,
+    "precision": 0.3333333333333333,
+    "recall": 0.06338028169014084,
+    "confusion_matrix": [
+      [
+        214,
+        18
+      ],
+      [
+        133,
+        9
+      ]
+    ]
+  },
+  "feature_importance_top5": [
+    {
+      "feature": "rsi14_5m",
+      "gain": 666.3780097961426
+    },
+    {
+      "feature": "dist_ema200_atr",
+      "gain": 640.3741620779037
+    },
+    {
+      "feature": "minutes_since_last",
+      "gain": 639.3788299560547
+    },
+    {
+      "feature": "recent_body_atr",
+      "gain": 614.3981118798256
+    },
+    {
+      "feature": "rsi30",
+      "gain": 598.4707450866699
+    }
+  ]
+}

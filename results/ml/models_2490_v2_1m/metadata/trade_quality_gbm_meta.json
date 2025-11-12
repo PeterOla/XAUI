@@ -1,0 +1,83 @@
+{
+  "model_name": "trade_quality_gbm",
+  "model_type": "LightGBM Classifier",
+  "training_date": "2025-11-11T14:53:53.465712",
+  "features_used": [
+    "hour",
+    "dow",
+    "side_encoded",
+    "atr14",
+    "entry_body_pct",
+    "entry_upper_wick_pct",
+    "entry_lower_wick_pct",
+    "entry_range_atr",
+    "entry_dist_stop_atr",
+    "recent_range_atr",
+    "recent_body_atr",
+    "recent_momentum",
+    "relevant_wick",
+    "side_x_body",
+    "side_x_relevant_wick"
+  ],
+  "label": "label_win (pips > 0)",
+  "train_rows": 1743,
+  "val_rows": 373,
+  "test_rows": 374,
+  "hyperparameters": {
+    "num_leaves": 31,
+    "learning_rate": 0.05,
+    "n_estimators": 100
+  },
+  "val_metrics": {
+    "auc": 0.5232607767819035,
+    "precision": 0.3333333333333333,
+    "recall": 0.13380281690140844,
+    "confusion_matrix": [
+      [
+        193,
+        38
+      ],
+      [
+        123,
+        19
+      ]
+    ]
+  },
+  "test_metrics": {
+    "auc": 0.5151469159786304,
+    "precision": 0.4268292682926829,
+    "recall": 0.24647887323943662,
+    "confusion_matrix": [
+      [
+        185,
+        47
+      ],
+      [
+        107,
+        35
+      ]
+    ]
+  },
+  "feature_importance_top5": [
+    {
+      "feature": "atr14",
+      "gain": 1279.1029364168644
+    },
+    {
+      "feature": "recent_body_atr",
+      "gain": 1138.474258184433
+    },
+    {
+      "feature": "entry_dist_stop_atr",
+      "gain": 1124.7590419054031
+    },
+    {
+      "feature": "entry_range_atr",
+      "gain": 1087.7196332216263
+    },
+    {
+      "feature": "recent_range_atr",
+      "gain": 1070.2063628435135
+    }
+  ]
+}

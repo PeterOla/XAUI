@@ -1,0 +1,78 @@
+{
+  "model_name": "trade_quality_lr",
+  "model_type": "Logistic Regression",
+  "training_date": "2025-11-11T16:16:29.637611",
+  "features_used": [
+    "hour",
+    "dow",
+    "side_encoded",
+    "is_london",
+    "is_ny",
+    "is_overlap",
+    "entry_body_pct",
+    "entry_upper_wick_pct",
+    "entry_lower_wick_pct",
+    "entry_range_atr",
+    "entry_dist_stop_atr",
+    "atr14",
+    "atr_pct",
+    "rsi14",
+    "rsi30",
+    "macd_hist",
+    "bb_pct",
+    "bb_width",
+    "momentum_3",
+    "momentum_10",
+    "dist_ema20_atr",
+    "dist_ema50_atr",
+    "dist_ema200_atr",
+    "above_ema20",
+    "above_ema50",
+    "above_ema200",
+    "recent_range_atr",
+    "recent_body_atr",
+    "recent_momentum",
+    "atr14_5m",
+    "rsi14_5m",
+    "minutes_since_last",
+    "relevant_wick",
+    "side_x_body",
+    "side_x_relevant_wick",
+    "side_x_rsi",
+    "side_x_macd"
+  ],
+  "label": "label_win (pips > 0)",
+  "train_rows": 1743,
+  "val_rows": 373,
+  "test_rows": 374,
+  "val_metrics": {
+    "auc": 0.5113407719041522,
+    "precision": 0.6666666666666666,
+    "recall": 0.014084507042253521,
+    "confusion_matrix": [
+      [
+        230,
+        1
+      ],
+      [
+        140,
+        2
+      ]
+    ]
+  },
+  "test_metrics": {
+    "auc": 0.47231665857212246,
+    "precision": 0.0,
+    "recall": 0.0,
+    "confusion_matrix": [
+      [
+        229,
+        3
+      ],
+      [
+        142,
+        0
+      ]
+    ]
+  }
+}

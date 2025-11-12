@@ -1,0 +1,6 @@
+gate,passed,value,threshold
+PF >= 1.25,True,2.6352773063591743,1.25
+WR >= 38%,True,66.66666666666666,38.0
+Trades >= 15,False,9.0,15.0
+PF improvement >= 5%,True,2.374175406001176,1.05
+ALL GATES,False,,

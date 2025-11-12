@@ -53,7 +53,7 @@ def profit_factor_retained(df_test, y_pred_proba, threshold, pips_col="pips"):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--features-parquet", default=os.path.join("data","features","trades_features.parquet"))
+    ap.add_argument("--features-parquet", default=os.path.join("data","features","trades_features_1269.parquet"))
     ap.add_argument("--out-dir", default="ml/models")
     ap.add_argument("--reports-dir", default="ml/reports")
     args = ap.parse_args()
@@ -63,14 +63,27 @@ def main():
     Path(args.reports_dir).mkdir(parents=True, exist_ok=True)
 
     df = pd.read_parquet(args.features_parquet)
-    # Drop non-feature cols
-    excl = ["pips", "label_win", "date", "sec_session"]
+    
+    # Drop non-feature cols + constant session features + price-regime dependent features
+    excl = [
+        "pips", "label_win", "date", "sec_session",
+        # Constant session flags (no variance):
+        "sec_is_asia", "sec_is_london", "sec_is_overlap", 
+        "sec_is_ny_late", "sec_is_off",
+        # Price-regime dependent (absolute price levels):
+        # Train 2015-2020: $1216-1589, Test 2023-2025: $1984-3962 = non-transferable
+        "open", "close", "high", "low", "ema200", 
+        # Keep: ema_dist_atr, body_pct, wicks, ranges, normalized features
+    ]
     feature_cols = [c for c in df.columns if c not in excl]
+    print(f"Using {len(feature_cols)} features (excluded {len(excl)} columns)")
     X = df[feature_cols].fillna(df[feature_cols].median())
     y = df["label_win"].astype(int)
 
-    # Time split
+    # Sequential time-based split (no date boundaries - avoids regime mismatch)
     train, val, test = time_split(df, train_pct=0.70, val_pct=0.15)
+    print(f"Sequential time split: Train (first 70%), Val (next 15%), Test (last 15%)")
+    
     save_splits(train, val, test)
 
     # Fillna: median first, then 0 for all-NaN columns (ATR, EMA features might be NaN)

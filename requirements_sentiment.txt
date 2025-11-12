@@ -1,0 +1,22 @@
+# GDELT News + Sentiment Analysis Requirements
+# Install with: pip install -r requirements_sentiment.txt
+
+# Core dependencies
+pandas>=2.0.0
+numpy>=1.24.0
+pyarrow>=12.0.0  # For parquet files
+
+# GDELT API fetching
+requests>=2.31.0
+
+# HuggingFace transformers for sentiment analysis
+transformers>=4.30.0
+torch>=2.0.0  # CPU version by default
+# For GPU support, install: pip install torch --index-url https://download.pytorch.org/whl/cu118
+
+# Progress bars
+tqdm>=4.65.0
+
+# Optional: For better tokenization
+sentencepiece>=0.1.99
+tokenizers>=0.13.3

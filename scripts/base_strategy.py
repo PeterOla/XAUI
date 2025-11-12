@@ -464,8 +464,10 @@ def main(argv=None):
             "Example: --trend-tfs 1m,5m,15m --trend-min-k 2 will allow days where at least 2 of {1m,5m,15m} are Up."
         ),
     )
-    parser.add_argument("--long-only", action="store_true", help="Only take long trades (default behavior if no side is specified)")
+    parser.add_argument("--long-only", action="store_true", help="Only take long trades")
     parser.add_argument("--short-only", action="store_true", help="Only take short trades")
+    parser.add_argument("--both-sides", action="store_true", help="Take both long and short trades (default: long-only)")
+    parser.add_argument("--ignore-ema-filter", action="store_true", help="Trade on ALL days (ignore EMA200 trend filter)")
     parser.add_argument("--run-tag", default="", help="Optional tag appended to output filenames (e.g., 'up_buy_only')")
     parser.add_argument("--date-start", default=None, help="Optional start date (UTC, YYYY-MM-DD) to filter input rows")
     parser.add_argument("--date-end", default=None, help="Optional end date (UTC, YYYY-MM-DD, inclusive) to filter input rows")
@@ -543,7 +545,7 @@ def main(argv=None):
             print(f"⚠️ Failed to load filter CSV {args.filter_csv}: {e}")
 
     # Build filter_days from trend files if not explicitly provided
-    if filter_days is None and not args.no_trend_filter:
+    if filter_days is None and not args.no_trend_filter and not args.ignore_ema_filter:
         def load_days_from_tf(tf_label: str) -> Optional[set]:
             tf_label = tf_label.strip().lower()
             tf_file = os.path.join("data", "trend", f"ema200_trend_by_date_{tf_label}.csv")
@@ -623,15 +625,17 @@ def main(argv=None):
     # Sides filtering
     if args.long_only and args.short_only:
         raise SystemExit("--long-only and --short-only cannot be used together")
-    # Default to long-only when neither flag is provided (up_buy_only default)
-    if not args.long_only and not args.short_only:
-        allowed_sides = {"long"}
-    elif args.long_only:
-        allowed_sides = {"long"}
+    if args.both_sides and (args.long_only or args.short_only):
+        raise SystemExit("--both-sides cannot be used with --long-only or --short-only")
+    
+    # Determine allowed sides
+    if args.both_sides:
+        allowed_sides = None  # None = allow both long and short
     elif args.short_only:
         allowed_sides = {"short"}
     else:
-        allowed_sides = None
+        # Default to long-only (preserves backward compatibility)
+        allowed_sides = {"long"}
 
     cfg = StrategyConfig(
         st_length=args.st_length,

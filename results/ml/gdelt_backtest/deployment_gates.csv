@@ -1,0 +1,11 @@
+filter,count,gate_count_pass,pf,gate_pf_pass,wr,gate_wr_pass,improvement_vs_baseline,gate_improvement_pass,all_gates_pass
+has_news,371,✅,1.109,❌,38.01,✅,-0.1%,❌,❌
+very_high_coverage,371,✅,1.109,❌,38.01,✅,-0.1%,❌,❌
+high_coverage,371,✅,1.109,❌,38.01,✅,-0.1%,❌,❌
+gold_focused,359,✅,1.091,❌,37.88,❌,-1.7%,❌,❌
+moderate_bearish,42,✅,0.719,❌,35.71,❌,-35.2%,❌,❌
+moderate_directional,54,✅,0.656,❌,35.19,❌,-40.9%,❌,❌
+moderate_bullish,12,❌,0.335,❌,33.33,❌,-69.8%,❌,❌
+strong_bullish,0,❌,0.0,❌,0.0,❌,-100.0%,❌,❌
+strong_bearish,0,❌,0.0,❌,0.0,❌,-100.0%,❌,❌
+strong_directional,0,❌,0.0,❌,0.0,❌,-100.0%,❌,❌

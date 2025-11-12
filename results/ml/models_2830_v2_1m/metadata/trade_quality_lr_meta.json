@@ -1,0 +1,56 @@
+{
+  "model_name": "trade_quality_lr",
+  "model_type": "Logistic Regression",
+  "training_date": "2025-11-11T15:33:03.502571",
+  "features_used": [
+    "hour",
+    "dow",
+    "side_encoded",
+    "atr14",
+    "entry_body_pct",
+    "entry_upper_wick_pct",
+    "entry_lower_wick_pct",
+    "entry_range_atr",
+    "entry_dist_stop_atr",
+    "recent_range_atr",
+    "recent_body_atr",
+    "recent_momentum",
+    "relevant_wick",
+    "side_x_body",
+    "side_x_relevant_wick"
+  ],
+  "label": "label_win (pips > 0)",
+  "train_rows": 1980,
+  "val_rows": 424,
+  "test_rows": 426,
+  "val_metrics": {
+    "auc": 0.5226286125434705,
+    "precision": 0.6,
+    "recall": 0.01935483870967742,
+    "confusion_matrix": [
+      [
+        267,
+        2
+      ],
+      [
+        152,
+        3
+      ]
+    ]
+  },
+  "test_metrics": {
+    "auc": 0.48124999999999996,
+    "precision": 0.3783783783783784,
+    "recall": 0.0875,
+    "confusion_matrix": [
+      [
+        243,
+        23
+      ],
+      [
+        146,
+        14
+      ]
+    ]
+  }
+}

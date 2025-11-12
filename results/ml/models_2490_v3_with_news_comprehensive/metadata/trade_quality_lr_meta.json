@@ -1,0 +1,85 @@
+{
+  "model_name": "trade_quality_lr",
+  "model_type": "Logistic Regression",
+  "training_date": "2025-11-11T16:43:59.471105",
+  "features_used": [
+    "sentiment_0_30min",
+    "sentiment_30_60min",
+    "sentiment_1_3hr",
+    "sentiment_today",
+    "event_impact",
+    "minutes_since_event",
+    "has_event_nearby",
+    "hour",
+    "dow",
+    "side_encoded",
+    "is_london",
+    "is_ny",
+    "is_overlap",
+    "entry_body_pct",
+    "entry_upper_wick_pct",
+    "entry_lower_wick_pct",
+    "entry_range_atr",
+    "entry_dist_stop_atr",
+    "atr14",
+    "atr_pct",
+    "rsi14",
+    "rsi30",
+    "macd_hist",
+    "bb_pct",
+    "bb_width",
+    "momentum_3",
+    "momentum_10",
+    "dist_ema20_atr",
+    "dist_ema50_atr",
+    "dist_ema200_atr",
+    "above_ema20",
+    "above_ema50",
+    "above_ema200",
+    "recent_range_atr",
+    "recent_body_atr",
+    "recent_momentum",
+    "atr14_5m",
+    "rsi14_5m",
+    "minutes_since_last",
+    "relevant_wick",
+    "side_x_body",
+    "side_x_relevant_wick",
+    "side_x_rsi",
+    "side_x_macd"
+  ],
+  "label": "label_win (pips > 0)",
+  "train_rows": 1743,
+  "val_rows": 373,
+  "test_rows": 374,
+  "val_metrics": {
+    "auc": 0.4867538564721663,
+    "precision": 0.3333333333333333,
+    "recall": 0.007042253521126761,
+    "confusion_matrix": [
+      [
+        229,
+        2
+      ],
+      [
+        141,
+        1
+      ]
+    ]
+  },
+  "test_metrics": {
+    "auc": 0.5022462360369111,
+    "precision": 1.0,
+    "recall": 0.007042253521126761,
+    "confusion_matrix": [
+      [
+        232,
+        0
+      ],
+      [
+        141,
+        1
+      ]
+    ]
+  }
+}

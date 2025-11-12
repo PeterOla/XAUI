@@ -1,0 +1,112 @@
+{
+  "model_name": "trade_quality_gbm",
+  "model_type": "LightGBM Classifier",
+  "training_date": "2025-11-11T16:44:04.781439",
+  "features_used": [
+    "sentiment_0_30min",
+    "sentiment_30_60min",
+    "sentiment_1_3hr",
+    "sentiment_today",
+    "event_impact",
+    "minutes_since_event",
+    "has_event_nearby",
+    "hour",
+    "dow",
+    "side_encoded",
+    "is_london",
+    "is_ny",
+    "is_overlap",
+    "entry_body_pct",
+    "entry_upper_wick_pct",
+    "entry_lower_wick_pct",
+    "entry_range_atr",
+    "entry_dist_stop_atr",
+    "atr14",
+    "atr_pct",
+    "rsi14",
+    "rsi30",
+    "macd_hist",
+    "bb_pct",
+    "bb_width",
+    "momentum_3",
+    "momentum_10",
+    "dist_ema20_atr",
+    "dist_ema50_atr",
+    "dist_ema200_atr",
+    "above_ema20",
+    "above_ema50",
+    "above_ema200",
+    "recent_range_atr",
+    "recent_body_atr",
+    "recent_momentum",
+    "atr14_5m",
+    "rsi14_5m",
+    "minutes_since_last",
+    "relevant_wick",
+    "side_x_body",
+    "side_x_relevant_wick",
+    "side_x_rsi",
+    "side_x_macd"
+  ],
+  "label": "label_win (pips > 0)",
+  "train_rows": 1743,
+  "val_rows": 373,
+  "test_rows": 374,
+  "hyperparameters": {
+    "num_leaves": 31,
+    "learning_rate": 0.05,
+    "n_estimators": 100
+  },
+  "val_metrics": {
+    "auc": 0.4860069507956832,
+    "precision": 0.25,
+    "recall": 0.014084507042253521,
+    "confusion_matrix": [
+      [
+        225,
+        6
+      ],
+      [
+        140,
+        2
+      ]
+    ]
+  },
+  "test_metrics": {
+    "auc": 0.5021399951432735,
+    "precision": 0.75,
+    "recall": 0.02112676056338028,
+    "confusion_matrix": [
+      [
+        231,
+        1
+      ],
+      [
+        139,
+        3
+      ]
+    ]
+  },
+  "feature_importance_top5": [
+    {
+      "feature": "minutes_since_event",
+      "gain": 205.34328918904066
+    },
+    {
+      "feature": "event_impact",
+      "gain": 31.121967531740665
+    },
+    {
+      "feature": "sentiment_0_30min",
+      "gain": 0.0
+    },
+    {
+      "feature": "sentiment_30_60min",
+      "gain": 0.0
+    },
+    {
+      "feature": "sentiment_today",
+      "gain": 0.0
+    }
+  ]
+}

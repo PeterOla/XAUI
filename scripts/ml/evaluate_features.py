@@ -53,11 +53,14 @@ def main():
     num_cols = [c for c in df.columns if pd.api.types.is_numeric_dtype(df[c]) and c not in ("label_win","pips","date")]
     y = df["label_win"].astype(int)
 
+    # Fill NaN: chained fillna to handle all-NaN columns
+    X_filled = df[num_cols].fillna(df[num_cols].median()).fillna(0)
+
     # Mutual information and correlation
-    mi = mutual_info_classif(df[num_cols].fillna(df[num_cols].median()), y, random_state=42)
+    mi = mutual_info_classif(X_filled, y, random_state=42)
     mi_tbl = pd.DataFrame({"feature": num_cols, "mutual_info": mi})
-    corr_tbl = pd.DataFrame({"feature": num_cols, "corr": [np.corrcoef(df[c].fillna(df[c].median()), y)[0,1] for c in num_cols]})
-    auc_tbl = pd.DataFrame({"feature": num_cols, "auc": [univariate_auc(df[c].fillna(df[c].median()), y) for c in num_cols]})
+    corr_tbl = pd.DataFrame({"feature": num_cols, "corr": [np.corrcoef(X_filled[c], y)[0,1] for c in num_cols]})
+    auc_tbl = pd.DataFrame({"feature": num_cols, "auc": [univariate_auc(X_filled[c], y) for c in num_cols]})
 
     # Merge
     summary = mi_tbl.merge(corr_tbl, on="feature").merge(auc_tbl, on="feature")
