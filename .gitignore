@@ -7,6 +7,14 @@ data/**/*.csv
 data/**/*.json
 data/**/*.parquet
 
+# GDELT news headline files (large - typically 40-500MB)
+sentiments/news/*.csv
+sentiments/news/**/*.csv
+
+# Results files (can be large)
+results/**/*.csv
+results/**/*.parquet
+
 # Python virtual environment
 .venv/
 
