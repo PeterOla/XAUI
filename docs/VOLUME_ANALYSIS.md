@@ -5,8 +5,70 @@
 | Strategy | Total Trades | Trades/Month | Total Pips | Avg Pips/Trade | PF | WR |
 |----------|-------------|--------------|------------|----------------|----|----|
 | **1m Combined News Filter** | **140** | **6.7** | **+5,797** | **+41.40** 🏆 | **1.355** 🏆 | **45.0%** 🏆 |
+| 1m moderate_bearish (contrarian) | 36 | 1.7 | +2,384 | +66.23 | 1.680 | 44.44% |
+| 1m strong_bullish (momentum) | 104 | 5.0 | +3,412 | +32.81 | 1.266 | 45.19% |
 | **15m Uptrend Buy-Only** | **207** | **9.9** | **+2,630** | **+12.70** | ~1.13 | 38.2% |
-| **Difference** | -67 (-32%) ⬇️ | -3.2 | **+3,167 (+120%)** 🏆 | **+28.70 (+226%)** 🏆 | +0.225 | +6.8pp |
+| **Difference (Combined vs Uptrend)** | -67 (-32%) ⬇️ | -3.2 | **+3,167 (+120%)** 🏆 | **+28.70 (+226%)** 🏆 | +0.225 | +6.8pp |
+
+---
+
+## Individual Filter Performance (Test Set)
+
+The combined filter is composed of two complementary single filters, each validated independently:
+
+### Filter 1: moderate_bearish (Contrarian Strategy)
+**Logic:** `headline_count >= 5 AND net_sentiment < -0.1`  
+**Rationale:** Trade when news sentiment is bearish but SuperTrend triggers entry → catch oversold bounces
+
+**Test Set Performance (Jan 2024 - Oct 2025):**
+- **36 trades** (1.7/month)
+- **PF 1.680** (+51.4% vs baseline 1.110)
+- **WR 44.44%** (+6.47pp vs baseline 37.97%)
+- **Avg +66.23 pips/trade** (+51.29 pips vs baseline +14.94)
+- **Total: +2,384 pips**
+- **Max DD: -1,089 pips**
+
+**Deployment Gates:**
+- ✅ Count ≥ 20 trades (achieved: 36)
+- ✅ Profit Factor ≥ 1.25 (achieved: 1.680)
+- ✅ Win Rate ≥ 38% (achieved: 44.44%)
+- ✅ Improvement ≥ 10% vs baseline (achieved: +51.4%)
+
+### Filter 2: strong_bullish (Momentum Strategy)
+**Logic:** `headline_count >= 5 AND net_sentiment > 0.3`  
+**Rationale:** Trade when news + technicals both bullish → follow strong momentum
+
+**Test Set Performance (Jan 2024 - Oct 2025):**
+- **104 trades** (5.0/month)
+- **PF 1.266** (+14.1% vs baseline 1.110)
+- **WR 45.19%** (+7.22pp vs baseline 37.97%)
+- **Avg +32.81 pips/trade** (+17.87 pips vs baseline +14.94)
+- **Total: +3,412 pips**
+- **Max DD: -1,759 pips**
+
+**Deployment Gates:**
+- ✅ Count ≥ 20 trades (achieved: 104)
+- ✅ Profit Factor ≥ 1.25 (achieved: 1.266)
+- ✅ Win Rate ≥ 38% (achieved: 45.19%)
+- ✅ Improvement ≥ 10% vs baseline (achieved: +14.1%)
+
+### Combined Filter (OR Logic)
+**Logic:** `(headline_count >= 5 AND net_sentiment < -0.1) OR (headline_count >= 5 AND net_sentiment > 0.3)`  
+**Rationale:** Diversify across contrarian (bearish) and momentum (bullish) signals
+
+**Test Set Performance:**
+- **140 trades** (6.7/month) — Sum of both filters with minimal overlap
+- **PF 1.355** — Blended performance weighted by trade count
+- **WR 45.0%** — Both filters maintain high win rate
+- **Avg +41.40 pips/trade** — Weighted average (36×66.23 + 104×32.81) / 140
+- **Total: +5,797 pips** — Combined profit exceeds either filter alone
+- **Max DD: -2,079 pips**
+
+**Why Combined is Best:**
+1. **Diversification:** Captures both oversold bounces AND strong momentum
+2. **Higher volume:** 140 trades vs 104 (bullish) or 36 (bearish) alone
+3. **Stability:** Less reliant on single market regime
+4. **Proven edge:** Both components independently pass all deployment gates
 
 ---
 
