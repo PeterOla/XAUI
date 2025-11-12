@@ -1,128 +1,97 @@
-# XAUUSD SuperTrend Strategy
+# XAUUSD 1m SuperTrend + News Sentiment Filter
 
-This repository contains a clean SuperTrend backtest implementation for XAUUSD (Gold) trading using 1-minute price data.
+Lean, production-focused strategy for trading XAUUSD using a 1-minute SuperTrend setup plus a combined news sentiment filter. Validated on Jan 2024–Oct 2025.
+
+## Highlights
+
+- Trade window: 13:00–16:00 UTC
+- Entry: SuperTrend flip + alternating candle; Exit: cross back through ST (max SL distance capped)
+- Filters: Daily EMA200 trend + Combined news sentiment (bearish OR bullish)
+- Performance (test): 140 trades, PF 1.355, WR 45.0%, +41.40 pips/trade
+- Recommendation: Use COMBINED filter in production
+
+See `docs/VOLUME_ANALYSIS.md` for volume vs quality comparison.
 
 ## Data Requirements
 
-**Important Note**: The data files have been removed from this repository due to their large size. If you need access to the historical data files, please reach out to: **Olalerupeter@gmail.com**
+Place the following locally (gitignored due to size). If you need access, email: Olalerupeter@gmail.com
 
-The strategy expects 1-minute OHLC data in CSV format with the following structure:
-- `timestamp,Open,High,Low,Close` (UTC timezone; Volume optional)
-- Files should be placed in the `data/` directory
+- Price: `data/combined_xauusd_1min_full.csv` (UTC, 1m OHLC; columns: timestamp,Open,High,Low,Close)
+- Trend: `data/ema200_trend_by_date.csv`
+- Clean features: `data/features/trades_sentiment_gold_clean.parquet`
+- Clean headlines (optional reference): `sentiments/news/headlines_gold_specific_clean.csv`
+
+## Install
+
+```powershell
+pip install -r requirements.txt
+# Optional (only if rebuilding sentiment features):
+pip install -r requirements_sentiment.txt
+```
 
 ## Quick Start
 
+Backtest with news filter (combined):
 ```powershell
-# Run the strategy with default settings
-python scripts/base_strategy.py --input-csv data/your_data_file.csv --entry-hours 13-16 --plot
+python scripts\strategy_with_news_filter.py --use-news-filter --filter-type combined --entry-hours 13-16 --trend up
 ```
 
-This will:
-- Run the SuperTrend strategy on your data
-- Output results to `results/trends/` directory (full trade CSV, simplified CSV, and interactive HTML plot)
-- Apply entry hours filter (13-16 UTC) and trend filter by default
-
-## EMA200 Daily Trend Filter
-
-The strategy includes an optional EMA200-based daily trend filter:
-
--- **Trend file format**: `data/trend/ema200_trend_by_date_1m.csv` (default alias) with columns `date,trend` where trend ∈ {Up, Down}
-- **How it's computed**:
-  - Resample 1‑minute Close to 15‑minute intervals
-  - Compute EMA200 on the 15‑minute Close prices
-  - Shift index +1h (UTC → UTC+1), then sample at 12:45
-  - Trend = Up if Close > EMA200, else Down
-
-- **Generate trend file**:
+Generate EMA200 trend file (if missing):
 ```powershell
-# Generate six timeframes and write a 1m compatibility alias under data/trend/
-python scripts/generate_ema200_trend.py --input-csv data/your_data_file.csv --resamples 1m,5m,15m,30m,1h,4h --out-csv data/trend/ema200_trend_by_date_1m.csv
-```
-Generated files:
-- `data/trend/ema200_trend_by_date_5m.csv`
-- `data/trend/ema200_trend_by_date_15m.csv`
-- `data/trend/ema200_trend_by_date_30m.csv`
-- `data/trend/ema200_trend_by_date_1h.csv`
-- `data/trend/ema200_trend_by_date_4h.csv`
-- `data/trend/ema200_trend_by_date_1m.csv` (also written as the compatibility alias when provided via --out-csv)
-
-- **Usage in strategy**:
-  - Auto-loaded by default; disable with `--no-trend-filter`
-  - Choose trend direction with `--trend up|down|both` (default: `up`)
-
-## Strategy Configuration
-
-### Command Line Options
-
-```powershell
-python scripts/base_strategy.py --help
+python scripts\generate_ema200_trend.py --input-csv data\combined_xauusd_1min_full.csv --out-csv data\ema200_trend_by_date.csv
 ```
 
-Key parameters:
-- `--input-csv`: Path to your 1-minute OHLC CSV file
-- `--entry-hours`: UTC hour window for entries (e.g., "13-16" or "all")
-- `--st-length`: SuperTrend length parameter (default: 10)
-- `--st-multiplier`: SuperTrend multiplier (default: 3.6)
-- `--max-sl-distance-pips`: Maximum stop loss distance in pips (default: 520)
-- `--trend`: Trend filter direction - "up", "down", or "both" (default: "up")
-- `--long-only` / `--short-only`: Restrict to only long or short trades
-- `--plot`: Generate interactive HTML plot
-- `--out-dir`: Output directory for results
+## Paper Deploy and Monitor
 
-### Strategy Rules
+```powershell
+# Start paper deployment
+python scripts\deploy_live_strategy.py --mode paper --validate
 
-1. **Entry Pattern**: SuperTrend flip → alternating candle → entry on following candle
-2. **Entry Hours**: Only during specified UTC hours (default: 13-16)
-3. **Stop Loss**: Trails with SuperTrend line, capped at max distance
-4. **Exit**: When price crosses SuperTrend line (Low ≤ ST for longs, High ≥ ST for shorts)
-5. **Trend Filter**: Optional daily EMA200 filter (default: only trade on "Up" trend days)
+# Monitor live/paper performance
+python scripts\monitor_performance.py --mode paper --plot --export report.html
+```
 
-## Output Files
+Go live after ≥2 weeks if gates hold (≥20 trades): PF ≥ 1.25, WR ≥ 38%, Max DD ≤ 2,500 pips.
 
-The strategy generates output per timeframe under `results/trends/<timeframe>/` (default timeframe: 1m):
+## Optional: Rebuild Sentiment Features
 
-For example, for `--timeframe 1m`:
-- `results/trends/1m/trades.csv`
-- `results/trends/1m/trades_simple.csv`
-- `results/trends/1m/plot.html`
-- `results/trends/1m/latest.html`
+You can refresh news sentiment features (FinBERT + GDELT) with the minimal scripts under `scripts/ml/`:
+- `scripts/ml/analyze_gdelt_sentiment.py`
+- `scripts/ml/backtest_gdelt_filter.py`
+- `scripts/ml/create_gdelt_events.py`
+- `scripts/ml/check_news.py`
 
-Notes:
-- You can tag filenames using `--run-tag mytag` which appends suffixes like `trades_mytag.csv`.
-- Override the base output directory with `--out-dir` (the timeframe subfolder is appended automatically).
-
-## Technical Notes
-
-- **Pip Size**: 0.01 USD per pip (XAUUSD standard)
-- **SuperTrend**: Uses Pine Script-style RMA (Rolling Moving Average) for ATR calculation
-- **Exit Logic**: Prefers previous bar's SuperTrend value to avoid post-flip exit jumps
-- **Timezone**: All data and times are in UTC
+The strategy itself uses the cleaned parquet in `data/features/` and does not require model downloads at runtime.
 
 ## Repository Structure
 
 ```
+├── data/
+│   ├── combined_xauusd_1min_full.csv
+│   ├── ema200_trend_by_date.csv
+│   └── features/
+│       └── trades_sentiment_gold_clean.parquet
+├── sentiments/
+│   └── news/
+│       └── headlines_gold_specific_clean.csv
 ├── scripts/
-│   ├── base_strategy.py          # Main strategy implementation
-│   └── generate_ema200_trend.py  # EMA200 trend file generator
-├── data/                         # Place your CSV files here (gitignored). Trend outputs are under data/trend/
-├── results/trends/               # Strategy outputs grouped by timeframe (e.g., 1m/, 5m/)
-└── README.md                     # This file
+│   ├── base_strategy.py
+│   ├── strategy_with_news_filter.py
+│   ├── generate_ema200_trend.py
+│   ├── deploy_live_strategy.py
+│   └── monitor_performance.py
+├── docs/
+│   ├── VOLUME_ANALYSIS.md
+│   └── PLAN_SLIM.md
+└── plan.md (slim)
 ```
 
-## Installation & Dependencies
+## Notes
 
-Ensure you have the required Python packages installed:
-
-```powershell
-pip install -r requirements.txt
-```
-
-Or manually install the dependencies:
-
-```powershell
-pip install pandas numpy plotly
-```
+- All times UTC. Pip size: 0.01 USD per pip.
+- Prefer stable, reproducible backtests to complexity; re-validate quarterly.
+- Original verbose roadmap was removed; see `plan.md` (slim) and `docs/` for essentials.
 
 ## Contact
 
-For access to historical data files or questions about the strategy, please contact: **Olalerupeter@gmail.com**
+Questions or data access requests: Olalerupeter@gmail.com
